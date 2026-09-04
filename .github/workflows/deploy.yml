@@ -213,8 +213,22 @@ jobs:
         working-directory: frontend
         run: npm ci
 
+      - name: Check Firebase API key
+        working-directory: frontend
+        env:
+            VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+        run: |
+          if [ -z "$VITE_FIREBASE_API_KEY" ]; then
+           echo "❌ Firebase API key is NOT available"
+           exit 1
+          else
+            echo "✅ Firebase API key is available"
+          fi
+
       - name: Build frontend
         working-directory: frontend
+        env:
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
         run: npm run build
 
 
