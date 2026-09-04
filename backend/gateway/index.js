@@ -1,7 +1,6 @@
+import "dotenv/config"
 import express from "express"
-import dotenv from "dotenv"
 import proxy from "express-http-proxy"
-dotenv.config()
 import cors from "cors"
 import cookieParser from "cookie-parser"
 import { getCurrentUser } from "./controllers/user.controller.js"
@@ -10,11 +9,30 @@ import { proxyWithHeader } from "./utils/proxyWithHeader.js"
 import morgan from "morgan"
 const port =process.env.PORT
 
+
+const allowedOrigins = [
+    "http://localhost:5173",
+    "https://mayur-cortexai.online",
+    "https://www.mayur-cortexai.online"
+];
 const app=express()
-app.use(cors({
-    origin:process.env.FRONTEND_URL,
-    credentials:true
-}))
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error("Not allowed by CORS"));
+    },
+    credentials: true
+  })
+);
+
 app.use(morgan("dev"))
 app.use(cookieParser())
 app.use("/api/auth",proxy(process.env.AUTH_SERVICE))

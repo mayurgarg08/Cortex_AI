@@ -1,174 +1,283 @@
-name: cortex ai deployment
+name: Cortex AI Deployment
 
 on:
- push:
-   branches:
-     - main
+  push:
+    branches:
+      - main
 
 env:
   AWS_REGION: ${{ secrets.AWS_REGION }}
-  AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }} 
+  AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
 
-jobs: 
+jobs:
+
+  # ==========================================
+  # BACKEND DEPLOYMENT
+  # ==========================================
 
   deploy-backend:
-     runs-on: ubuntu-latest 
-     steps:
+    runs-on: ubuntu-latest
+
+    steps:
+
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: aws configure
+
+      # ----------------------------------------
+      # AWS LOGIN
+      # ----------------------------------------
+
+      - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
-        with: 
-          aws-access-key-id: ${{secrets.AWS_ACCESS_KEY}}
-          aws-secret-access-key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
-          aws-region: ${{env.AWS_REGION}}
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+
+      # ----------------------------------------
+      # LOGIN TO ECR
+      # ----------------------------------------
 
       - name: Login to ECR
-        id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
+
+
+      # ========================================
+      # GATEWAY
+      # ========================================
 
       - name: Build Gateway
         run: |
-          docker build -f backend/gateway/Dockerfile -t gateway backend 
+          docker build \
+            -f backend/gateway/Dockerfile \
+            -t gateway \
+            backend
 
-      - name: tag Gateway
+      - name: Push Gateway
         run: |
-          docker tag gateway:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/gateway:latest
+          docker tag gateway:latest \
+            $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/gateway:latest
 
-      - name: push Gateway 
+          docker push \
+            $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/gateway:latest
+
+
+      # ========================================
+      # AUTH
+      # ========================================
+
+      - name: Build Auth
         run: |
-          docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/gateway:latest  
+          docker build \
+            -f backend/services/auth/Dockerfile \
+            -t auth-service \
+            backend
 
-
-
-
-      - name: Build Auth 
+      - name: Push Auth
         run: |
-          docker build -f backend/services/auth/Dockerfile -t auth-service backend 
+          docker tag auth-service:latest \
+            $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/auth-service:latest
 
-      - name: tag auth
+          docker push \
+            $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/auth-service:latest
+
+
+      # ========================================
+      # CHAT
+      # ========================================
+
+      - name: Build Chat
         run: |
-          docker tag auth-service:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/auth-service:latest
+          docker build \
+            -f backend/services/chat/Dockerfile \
+            -t chat-service \
+            backend
 
-      - name: push auth 
+      - name: Push Chat
         run: |
-          docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/auth-service:latest 
+          docker tag chat-service:latest \
+            $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/chat-service:latest
+
+          docker push \
+            $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/chat-service:latest
 
 
+      # ========================================
+      # AGENT
+      # ========================================
 
-      - name: Build Chat 
+      - name: Build Agent
         run: |
-          docker build -f backend/services/chat/Dockerfile -t chat-service backend 
+          docker build \
+            -f backend/services/agent/Dockerfile \
+            -t agent-service \
+            backend
 
-      - name: tag chat
+      - name: Push Agent
         run: |
-          docker tag chat-service:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/chat-service:latest
+          docker tag agent-service:latest \
+            $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/agent-service:latest
 
-      - name: push chat 
+          docker push \
+            $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/agent-service:latest
+
+
+      # ========================================
+      # BILLING
+      # ========================================
+
+      - name: Build Billing
         run: |
-          docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/chat-service:latest
+          docker build \
+            -f backend/services/billing/Dockerfile \
+            -t billing-service \
+            backend
 
-
-
-      - name: Build agent 
+      - name: Push Billing
         run: |
-          docker build -f backend/services/agent/Dockerfile -t agent-service backend 
+          docker tag billing-service:latest \
+            $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/billing-service:latest
 
-      - name: tag agent
-        run: |
-          docker tag agent-service:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/agent-service:latest
-
-      - name: push agent 
-        run: |
-          docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/agent-service:latest
+          docker push \
+            $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/billing-service:latest
 
 
+      # ========================================
+      # DEPLOY TO ECS
+      # ========================================
 
-
-      - name: Build billing 
-        run: |
-          docker build -f backend/services/billing/Dockerfile -t billing-service backend 
-
-      - name: tag billing
-        run: |
-          docker tag billing-service:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/billing-service:latest
-
-      - name: push billing 
-        run: |
-          docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/billing-service:latest  
-
-
-      - name: deploy gateway
+      - name: Deploy Gateway
         run: |
           aws ecs update-service \
-          --cluster ${{secrets.ECS_CLUSTER}} \
-          --service ${{secrets.GATEWAY_SERVICE}} \
-          --force-new-deployment
+            --cluster ${{ secrets.ECS_CLUSTER }} \
+            --service ${{ secrets.GATEWAY_SERVICE }} \
+            --force-new-deployment
 
-
-      - name: deploy auth
+      - name: Deploy Auth
         run: |
           aws ecs update-service \
-          --cluster ${{secrets.ECS_CLUSTER}} \
-          --service ${{secrets.AUTH_SERVICE}} \
-          --force-new-deployment
+            --cluster ${{ secrets.ECS_CLUSTER }} \
+            --service ${{ secrets.AUTH_SERVICE }} \
+            --force-new-deployment
 
-      - name: deploy chat
+      - name: Deploy Chat
         run: |
           aws ecs update-service \
-          --cluster ${{secrets.ECS_CLUSTER}} \
-          --service ${{secrets.CHAT_SERVICE}} \
-          --force-new-deployment          
+            --cluster ${{ secrets.ECS_CLUSTER }} \
+            --service ${{ secrets.CHAT_SERVICE }} \
+            --force-new-deployment
 
-
-      - name: deploy agent
+      - name: Deploy Agent
         run: |
           aws ecs update-service \
-          --cluster ${{secrets.ECS_CLUSTER}} \
-          --service ${{secrets.AGENT_SERVICE}} \
-          --force-new-deployment
+            --cluster ${{ secrets.ECS_CLUSTER }} \
+            --service ${{ secrets.AGENT_SERVICE }} \
+            --force-new-deployment
 
-      - name: deploy billing
+      - name: Deploy Billing
         run: |
           aws ecs update-service \
-          --cluster ${{secrets.ECS_CLUSTER}} \
-          --service ${{secrets.BILLING_SERVICE}} \
-          --force-new-deployment  
+            --cluster ${{ secrets.ECS_CLUSTER }} \
+            --service ${{ secrets.BILLING_SERVICE }} \
+            --force-new-deployment
+
+
+  # ==========================================
+  # FRONTEND DEPLOYMENT
+  # ==========================================
 
   deploy-frontend:
     needs: deploy-backend
-    runs-on: ubuntu-latest 
+    runs-on: ubuntu-latest
+
     steps:
+
       - name: Checkout
-        uses: actions/checkout@v4 
+        uses: actions/checkout@v4
 
-      - name: build frontend
-        run: | 
-          cd frontend
-          npm install
-          npm run build        
 
-      - name: aws configure
-        uses: aws-actions/configure-aws-credentials@v4
-        with: 
-          aws-access-key-id: ${{secrets.AWS_ACCESS_KEY}}
-          aws-secret-access-key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
-          aws-region: ${{env.AWS_REGION}}
+      # ----------------------------------------
+      # BUILD FRONTEND
+      # ----------------------------------------
 
-      - name: upload to s3
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build
+
+
+      # ----------------------------------------
+      # SETUP SSH
+      # ----------------------------------------
+
+      - name: Setup SSH
         run: |
-          aws s3 sync \
-          frontend/dist \
-          s3://${{secrets.S3_BUCKET}} \
-          --delete
+          mkdir -p ~/.ssh
 
-      - name: invalidate cloudfront
-        run: | 
-          aws cloudfront create-invalidation \
-          --distribution-id \
-          ${{secrets.CLOUDFRONT_DISTRIBUTION_ID}} \
-          --paths "/*"
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/cortexai.pem
+
+          chmod 600 ~/.ssh/cortexai.pem
+
+          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
 
 
-        
+      # ----------------------------------------
+      # CLEAN OLD FRONTEND
+      # ----------------------------------------
+
+      - name: Clean old frontend
+        run: |
+          ssh \
+            -i ~/.ssh/cortexai.pem \
+            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} \
+            "sudo rm -rf /var/www/cortexai/*"
+
+
+      # ----------------------------------------
+      # COPY NEW FRONTEND TO EC2
+      # ----------------------------------------
+
+      - name: Upload frontend to EC2
+        run: |
+          tar -czf - -C frontend/dist . | \
+          ssh \
+            -i ~/.ssh/cortexai.pem \
+            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} \
+            "sudo tar -xzf - -C /var/www/cortexai"
+
+
+      # ----------------------------------------
+      # FIX FILE PERMISSIONS
+      # ----------------------------------------
+
+      - name: Fix frontend permissions
+        run: |
+          ssh \
+            -i ~/.ssh/cortexai.pem \
+            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} \
+            "sudo find /var/www/cortexai -type d -exec chmod 755 {} \; && \
+             sudo find /var/www/cortexai -type f -exec chmod 644 {} \;"
+
+
+      # ----------------------------------------
+      # RELOAD NGINX
+      # ----------------------------------------
+
+      - name: Reload Nginx
+        run: |
+          ssh \
+            -i ~/.ssh/cortexai.pem \
+            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} \
+            "sudo nginx -t && sudo systemctl reload nginx"

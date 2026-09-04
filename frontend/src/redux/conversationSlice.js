@@ -8,10 +8,10 @@ const conversationSlice=createSlice({
     },
     reducers:{
        setConversations:(state,action)=>{
-        state.conversations=action.payload
+        state.conversations=Array.isArray(action.payload) ? action.payload : []
        },
        addConversation:(state,action)=>{
-        state.conversations.unshift(action.payload)
+        if (action.payload) state.conversations.unshift(action.payload)
        },
         setSelectedConversation:(state,action)=>{
         state.selectedConversation=action.payload
@@ -19,7 +19,7 @@ const conversationSlice=createSlice({
 
       setConvTitle:(state,action)=>{
            const {title,conversationId}=action.payload
-           state.conversations=state.conversations.map((conv)=>(
+           state.conversations=(Array.isArray(state.conversations) ? state.conversations : []).map((conv)=>(
             conv._id==conversationId?(
              { ...conv,title}
             ):conv

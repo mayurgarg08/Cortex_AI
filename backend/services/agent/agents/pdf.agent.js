@@ -4,9 +4,10 @@ import { getFromS3 } from "../utils/getFromS3.js"
 import { uploadToS3 } from "../utils/uploadToS3.js"
 import { deductCredits } from "../utils/deductCredits.js"
 import { checkAgentLimit } from "../config/agentLimit.js"
+import { parseStructuredResponse } from "../utils/parseStructuredResponse.js"
 export const pdfAgent=async (state) => {
     try {
-        const rate=await checkAgentLimit(state.userId,"pdf")
+        await checkAgentLimit(state.userId,"pdf")
         
         
         const llm=await getModel("pdf")
@@ -42,8 +43,7 @@ ${state.prompt}
         `
 
         const res=await llm.invoke(prompt)
-        const data=JSON.parse(res.content)
-       await deductCredits(state.userId,"pdf")
+        const data=parseStructuredResponse(res.content,"sections")
         
         const pdfBuffer=await generatePdf(data)
 
@@ -51,6 +51,7 @@ ${state.prompt}
         await uploadToS3(filename,pdfBuffer,"application/pdf")
 
         const downloadUrl=await getFromS3(filename,24*60)
+        await deductCredits(state.userId,"pdf")
 
         return {
           ...state,
@@ -64,10 +65,11 @@ _Link expires in 10 minutes._`
         }
 
     } catch (error) {
-       console.log(error)
+       console.error("PDF generation failed:", error?.message || error)
          return {
             ...state,
-            aiResponse:error?.data?.message || "failed to generate pdf"
+            aiResponse:error?.data?.message || error?.response?.data?.message || "Unable to generate the PDF. Please try again.",
+            debugError:error?.message || "Unknown PDF generation error"
         }
     }
 }

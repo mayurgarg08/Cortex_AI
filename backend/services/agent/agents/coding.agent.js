@@ -2,11 +2,39 @@ import { checkAgentLimit } from "../config/agentLimit.js"
 import { getModel } from "../config/llmModels.js"
 import { deductCredits } from "../utils/deductCredits.js"
 
+const SIMPLE_CODE_REQUEST = /\b(code|program|function|method|algorithm|debug|fix|explain|java|javascript|python|c\+\+|c#|typescript|sql)\b/i
+
+const withTimeout = (promise, milliseconds) => Promise.race([
+   promise,
+   new Promise((_, reject) => setTimeout(
+      () => reject(new Error("The code model took too long to respond.")),
+      milliseconds
+   ))
+])
+
 export const codingAgent=async (state) => {
 try {
    await checkAgentLimit(state.userId,"coding")
-   const intentLlm=await getModel("intent")
    const llm=await getModel("coding")
+   // Do not spend a second model call classifying ordinary coding questions.
+   // Two sequential calls were exceeding the gateway timeout intermittently.
+   if (SIMPLE_CODE_REQUEST.test(state.prompt)) {
+      const response = await withTimeout(llm.invoke(`
+You are CortexAI's programming assistant. Answer the request directly.
+Use concise Markdown and include complete runnable code in a fenced code block
+when code is requested. Do not generate a multi-file project unless requested.
+
+User request: ${state.prompt}`), 25000)
+
+      await deductCredits(state.userId,"coding")
+      return {
+         ...state,
+         aiResponse: String(response.content || "Unable to generate code."),
+         artifacts:[]
+      }
+   }
+
+   const intentLlm=await getModel("intent")
    const intentRes=await intentLlm.invoke(`
     You are an intent classifier.
 

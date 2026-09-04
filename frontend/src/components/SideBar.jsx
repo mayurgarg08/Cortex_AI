@@ -14,7 +14,8 @@ function SideBar() {
     const [collapsed, setCollapsed] = useState(false)
     const dispatch = useDispatch()
     const [imageError, setImageError] = useState(false)
-    const { conversations, selectedConversation } = useSelector(state => state.conversation)
+    const { conversations: storedConversations, selectedConversation } = useSelector(state => state.conversation)
+    const conversations = Array.isArray(storedConversations) ? storedConversations : []
     const { userData } = useSelector(state => state.user)
     const [showBilling,setShowBilling]=useState(false)
     const [mobileOpen,setMobileOpen]=useState(false)

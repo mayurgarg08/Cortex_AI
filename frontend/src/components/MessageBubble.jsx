@@ -9,6 +9,8 @@ function MessageBubble({ role, content, images }) {
   const isUser = role === "user"
   const [lightBox, setLightBox] = useState(null)
   const [copiedCode, setCopiedCode] = useState("")
+  const messageContent = typeof content === "string" ? content : "Unable to display this message."
+  const messageImages = Array.isArray(images) ? images : []
 
   const copyCode = async (code) => {
     await navigator.clipboard.writeText(code)
@@ -31,9 +33,9 @@ function MessageBubble({ role, content, images }) {
         }`}>
 
 
-        {images.length > 0 && (
+        {messageImages.length > 0 && (
           <div className='flex flex-wrap gap-3 mt-4'>
-            {images.map((img, i) => (
+            {messageImages.map((img, i) => (
               <img
                 key={i}
                 src={img}
@@ -177,7 +179,7 @@ function MessageBubble({ role, content, images }) {
 
           }}
         >
-          {content}
+          {messageContent}
         </Markdown>
 
 
