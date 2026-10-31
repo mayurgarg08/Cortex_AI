@@ -1,6 +1,7 @@
 import { getModel } from "../config/llmModels.js"
 import { generatePpt } from "../utils/generatePpt.js"
 import { storeFile } from "../utils/storeFile.js"
+import { pptResponse, toFileName } from "../utils/fileResponse.js"
 import { deductCredits } from "../utils/deductCredits.js"
 import { checkAgentLimit } from "../config/agentLimit.js"
 
@@ -88,20 +89,14 @@ const buffer=await ppt.write({
     outputType:"nodebuffer"
 })
 
-const filename=`ppt-${Date.now()}.pptx`
+const filename=toFileName(data.title,"pptx",`presentation-${Date.now()}`)
 
 const downloadUrl=await storeFile(filename,buffer,"application/vnd.openxmlformats-officedocument.presentationml.presentation",24*60*60)
 await deductCredits(state.userId,"ppt")
 
 return {
     ...state,
-    aiResponse:`# ✅ Presentation Generated
-
-**${data.title}**
-
-📥 [Download PPT](${downloadUrl})
-
-_Link expires in 24 hours._`
+    aiResponse:pptResponse(data,filename,downloadUrl)
 }
 
     } catch (error) {

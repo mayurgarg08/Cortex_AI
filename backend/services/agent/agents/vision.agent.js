@@ -1,6 +1,7 @@
 import { getModel } from "../config/llmModels.js"
 import axios from "axios"
 import { storeFile } from "../utils/storeFile.js"
+import { imageResponse, toFileName } from "../utils/fileResponse.js"
 import { deductCredits } from "../utils/deductCredits.js"
 import { checkAgentLimit } from "../config/agentLimit.js"
 export const visionAgent=async (state) => {
@@ -46,19 +47,14 @@ const imageRes=await axios.get(imageUrl,{responseType:"arraybuffer",timeout:6000
 const buffer=Buffer.from(imageRes.data)
 if (!buffer.length) throw new Error("Image provider returned an empty file.")
 const contentType=imageRes.headers["content-type"]?.split(";")[0] || "image/jpeg"
-const filename=`image-${Date.now()}.${contentType === "image/png" ? "png" : "jpg"}`
+const filename=toFileName(fallbackPrompt.split(" ").slice(0,8).join(" "),contentType === "image/png" ? "png" : "jpg",`image-${Date.now()}`)
 
 const downloadUrl=await storeFile(filename,buffer,contentType,24*60*60)
 await deductCredits(state.userId,"vision")
 
 return {
     ...state,
-    aiResponse:`
-![Generated Image](${downloadUrl})
-
-📥 [Download Image](${downloadUrl})
-
-⏳ Link expires in 24 hours.`
+    aiResponse:imageResponse(state.prompt,filename,downloadUrl)
 }
     } catch (error) {
        console.error("Image generation failed:", error?.message || error)

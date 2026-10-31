@@ -1,6 +1,7 @@
 import { getModel } from "../config/llmModels.js"
 import { generatePdf } from "../utils/generatePdf.js"
 import { storeFile } from "../utils/storeFile.js"
+import { pdfResponse, toFileName } from "../utils/fileResponse.js"
 import { deductCredits } from "../utils/deductCredits.js"
 import { checkAgentLimit } from "../config/agentLimit.js"
 import { parseStructuredResponse } from "../utils/parseStructuredResponse.js"
@@ -46,19 +47,13 @@ ${state.prompt}
         
         const pdfBuffer=await generatePdf(data)
 
-        const filename=`pdf-${Date.now()}.pdf`
+        const filename=toFileName(data.title,"pdf",`document-${Date.now()}`)
         const downloadUrl=await storeFile(filename,pdfBuffer,"application/pdf",24*60*60)
         await deductCredits(state.userId,"pdf")
 
         return {
           ...state,
-          aiResponse:`# PDF Generated
-
-**${data.title}**
-
-📥 [Download PDF](${downloadUrl})
-
-_Link expires in 24 hours._`
+          aiResponse:pdfResponse(data,filename,downloadUrl)
         }
 
     } catch (error) {

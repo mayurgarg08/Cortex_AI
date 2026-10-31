@@ -9,13 +9,22 @@ import { LogoMark } from './Logo'
 // Links to files produced by the PDF / PPT / Vision agents
 const isGeneratedFileLink = (href = "") => href.includes("/api/files/") || href.includes(".amazonaws.com/")
 
+// The link text is the file name (e.g. "Electric-Vehicles.pptx"); older messages use "Download PPT"
 const fileCardStyle = (label) => {
   const text = label.toLowerCase()
-  if (text.includes("pdf")) return { icon: FileText, tint: "from-rose-500/30 to-rose-500/5 text-rose-300", name: "PDF document" }
-  if (text.includes("ppt") || text.includes("presentation")) return { icon: Presentation, tint: "from-amber-500/30 to-amber-500/5 text-amber-300", name: "PowerPoint presentation" }
-  if (text.includes("image")) return { icon: ImageIcon, tint: "from-fuchsia-500/30 to-fuchsia-500/5 text-fuchsia-300", name: "Image" }
+  const extension = text.match(/\.(\w+)$/)?.[1]
+  const kind = extension
+    ? (extension === "pdf" ? "pdf" : extension.startsWith("ppt") ? "ppt" : ["jpg", "jpeg", "png", "webp"].includes(extension) ? "image" : "file")
+    : (text.includes("pdf") ? "pdf" : text.includes("ppt") ? "ppt" : text.includes("image") ? "image" : "file")
+
+  if (kind === "pdf") return { icon: FileText, tint: "from-rose-500/30 to-rose-500/5 text-rose-300", name: "PDF document" }
+  if (kind === "ppt") return { icon: Presentation, tint: "from-amber-500/30 to-amber-500/5 text-amber-300", name: "PowerPoint presentation" }
+  if (kind === "image") return { icon: ImageIcon, tint: "from-fuchsia-500/30 to-fuchsia-500/5 text-fuchsia-300", name: "Image" }
   return { icon: Download, tint: "from-indigo-500/30 to-indigo-500/5 text-indigo-300", name: "File" }
 }
+
+// Headings like "Your presentation is ready" from the file-generating agents
+const isReadyHeading = (text) => /^your .+ is ready$/i.test(text.trim())
 
 const textOf = (children) => React.Children.toArray(children).map(child => typeof child === "string" ? child : "").join("")
 
@@ -49,7 +58,16 @@ function MessageBubble({ role, content, images }) {
   const markdownComponents = {
     h1: ({ children }) => <h1 className='text-[22px] font-bold text-white mt-6 mb-3 first:mt-0'>{children}</h1>,
     h2: ({ children }) => <h2 className='text-[18px] font-semibold text-white mt-5 mb-2.5 first:mt-0'>{children}</h2>,
-    h3: ({ children }) => <h3 className='text-[16px] font-semibold text-slate-100 mt-4 mb-2 first:mt-0'>{children}</h3>,
+    h3: ({ children }) => isReadyHeading(textOf(children))
+      ? (
+        <h3 className='flex items-center gap-2 text-[16px] font-semibold text-white mt-4 mb-2.5 first:mt-0'>
+          <span className='flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/15 ring-1 ring-emerald-400/30'>
+            <Check size={13} className="text-emerald-300" strokeWidth={3} />
+          </span>
+          {children}
+        </h3>
+      )
+      : <h3 className='text-[16px] font-semibold text-slate-100 mt-4 mb-2 first:mt-0'>{children}</h3>,
     p: ({ children }) => <p className='mb-3 last:mb-0 whitespace-pre-wrap break-words'>{children}</p>,
     strong: ({ children }) => <strong className='font-semibold text-white'>{children}</strong>,
     ul: ({ children }) => <ul className='list-disc marker:text-violet-400/70 pl-5 space-y-1.5 my-3'>{children}</ul>,
@@ -75,8 +93,8 @@ function MessageBubble({ role, content, images }) {
               <Icon size={19} />
             </span>
             <span className='flex-1 min-w-0'>
-              <span className='block text-[13.5px] font-semibold text-slate-100'>{label}</span>
-              <span className='block text-[11.5px] text-slate-500'>{name} · click to download</span>
+              <span className='block truncate text-[13.5px] font-semibold text-slate-100'>{label}</span>
+              <span className='block text-[11.5px] text-slate-500'>{name} · download link valid for 24 hours</span>
             </span>
             <span className='flex h-8 w-8 items-center justify-center rounded-lg bg-brand text-white shadow-lg shadow-violet-900/40 transition-transform group-hover:scale-105'>
               <Download size={15} />
