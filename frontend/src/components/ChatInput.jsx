@@ -1,23 +1,28 @@
-import { Code2, FileText, Globe, ImageIcon, MessageSquare, Mic, MicOff, Paperclip, Presentation, Send, X, Zap } from 'lucide-react'
-import React, { useEffect, useState } from 'react'
+import { ArrowUp, FileText, Loader2, Mic, Paperclip, X } from 'lucide-react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import sendMessage from '../features/sendMessage'
 import { useDispatch, useSelector } from 'react-redux'
-import { addMessage, setArtifacts, setIsLoading, setMessages } from '../redux/messageSlice'
+import { addMessage, setArtifacts, setComposerPrefill, setIsLoading, setMessages } from '../redux/messageSlice'
 import { createConversation } from '../features/createConversation'
 import { addConversation, setConvTitle, setSelectedConversation } from '../redux/conversationSlice'
 import { updateConversation } from '../features/updateConversation'
-import { useRef } from 'react'
+import { AGENTS } from '../constants/agents'
 
+const formatSize = (bytes) => bytes >= 1024 * 1024
+  ? `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+  : `${Math.max(1, Math.round(bytes / 1024))} KB`
 
 function ChatInput() {
   const [value, setValue] = useState("")
-  const [selectedAgent, setSelectedAgent] = useState("Auto")
+  const [selectedAgent, setSelectedAgent] = useState("auto")
   const { selectedConversation } = useSelector(state => state.conversation)
-  const { messages, isLoading } = useSelector(state => state.message)
+  const { isLoading, composerPrefill } = useSelector(state => state.message)
   const [selectedFile, setSelectedFile] = useState(null)
   const [listening, setListening] = useState(false)
+  const [focused, setFocused] = useState(false)
   const recognitionRef = useRef(null)
   const fileRef = useRef(null)
+  const textareaRef = useRef(null)
   const dispatch = useDispatch()
 
 
@@ -47,9 +52,37 @@ function ChatInput() {
     recognitionRef.current = recognition
   }, [])
 
+  // Suggestion cards push a prompt and agent into the composer
+  // Syncing local state from a one-off Redux event, so setState here is intended
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => {
+    if (!composerPrefill) return
+    setValue(composerPrefill.text || "")
+    if (composerPrefill.agent) setSelectedAgent(composerPrefill.agent)
+    dispatch(setComposerPrefill(null))
+    textareaRef.current?.focus()
+  }, [composerPrefill])
+  /* eslint-enable react-hooks/set-state-in-effect */
+
+  // Grow the textarea with its content, up to a limit
+  useEffect(() => {
+    const el = textareaRef.current
+    if (!el) return
+    el.style.height = "auto"
+    el.style.height = `${Math.min(el.scrollHeight, 200)}px`
+  }, [value])
+
+  const filePreview = useMemo(
+    () => selectedFile?.type?.startsWith("image/") ? URL.createObjectURL(selectedFile) : null,
+    [selectedFile]
+  )
+  // Object URLs must be revoked or they leak memory
+  useEffect(() => () => filePreview && URL.revokeObjectURL(filePreview), [filePreview])
+
   const toggleMic = () => {
     if (!recognitionRef.current) {
-      alert("speech recognition not supported")
+      alert("Speech recognition is not supported in this browser")
+      return
     }
     if (listening) {
       recognitionRef.current.stop()
@@ -61,16 +94,15 @@ function ChatInput() {
 
   }
 
-
-
-
-
-
-
+  const clearFile = () => {
+    setSelectedFile(null)
+    if (fileRef.current) fileRef.current.value = ""
+  }
 
   const handleSendMessage = async () => {
     const prompt = value.trim()
     if (!prompt || isLoading) return
+    if (listening) recognitionRef.current?.stop()
 
     dispatch(setIsLoading(true))
     try {
@@ -92,14 +124,14 @@ function ChatInput() {
       const formData = new FormData()
       formData.append("prompt", prompt)
       formData.append("conversationId", conversation._id)
-      formData.append("agent", selectedAgent.toLowerCase())
+      formData.append("agent", selectedAgent)
       if (selectedFile) formData.append("file", selectedFile)
 
       dispatch(addMessage({ role: "user", content: prompt }))
       setValue("")
       const data = await sendMessage(formData)
       if (data?.debugError) {
-        console.error("PPT generation failed:", data.debugError)
+        console.error("Agent request failed:", data.debugError)
       }
       dispatch(setArtifacts(Array.isArray(data?.artifacts) ? data.artifacts : []))
       dispatch(addMessage({
@@ -116,165 +148,112 @@ function ChatInput() {
       }))
     } finally {
       dispatch(setIsLoading(false))
-      setSelectedFile(null)
+      clearFile()
     }
   }
 
-  const agents = [
-    {
-      id: "auto",
-      icon: Zap,
-      label: "Auto"
-    },
-
-    {
-      id: "chat",
-      icon: MessageSquare,
-      label: "Chat"
-    },
-
-    {
-      id: "coding",
-      icon: Code2,
-      label: "Coding"
-    },
-
-    {
-      id: "pdf",
-      icon: FileText,
-      label: "PDF"
-    },
-
-    {
-      id: "ppt",
-      icon: Presentation,
-      label: "PPT"
-    },
-
-    {
-      id: "vision",
-      icon: ImageIcon,
-      label: "Vision"
-    },
-
-    {
-      id: "search",
-      icon: Globe,
-      label: "Search"
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
+      e.preventDefault()
+      handleSendMessage()
     }
+  }
 
-  ]
+  const canSend = Boolean(value.trim()) && !isLoading
+  const activeAgent = AGENTS.find(agent => agent.id === selectedAgent)
 
   return (
-    <div className='w-full overflow-hidden px-3 md:px-5 py-4 border-t border-white/[0.06] bg-[#0d0f14]'>
-      <div className='flex flex-col gap-2 bg-white/[0.03] border border-white/[0.07] rounded-2xl px-4 pt-3.5 pb-3'>
+    <div className='relative z-10 shrink-0 px-3 sm:px-6 pb-4 pt-2'>
+      <div className='mx-auto w-full max-w-3xl'>
+        <div className={`relative rounded-3xl bg-ink-850/90 backdrop-blur-xl ring-1 transition-all duration-300
+          ${focused ? "ring-violet-400/40 shadow-[0_0_0_4px_rgba(139,92,246,0.08),0_20px_60px_-20px_rgba(139,92,246,0.45)]" : "ring-white/[0.08] shadow-[0_20px_50px_-25px_rgba(0,0,0,0.8)]"}`}>
 
-        <div className='flex w-[80%] gap-2 pr-2 flex-wrap'>
-          {agents.map((agent) => {
-            const isActive = selectedAgent === agent.label
-            const Icon = agent.icon
-            return (
-              <div
-                onClick={() => setSelectedAgent(agent.label)}
-                className={`
-            flex-shrink-0
-            cursor-pointer
-            inline-flex
-            items-center
-            gap-1.5
-            px-3
-            py-2
-            rounded-full
-            text-xs
-            font-medium
-            border
-            transition-all
+          <div className='flex gap-1.5 overflow-x-auto scrollbar-none px-3 pt-3'>
+            {AGENTS.map((agent) => {
+              const isActive = selectedAgent === agent.id
+              const Icon = agent.icon
+              return (
+                <button
+                  key={agent.id}
+                  title={agent.description}
+                  onClick={() => setSelectedAgent(agent.id)}
+                  className={`shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-medium transition-all duration-200 cursor-pointer
+                  ${isActive
+                      ? "bg-brand text-white shadow-[0_4px_16px_-4px_rgba(139,92,246,0.7)]"
+                      : "text-slate-400 bg-white/[0.03] ring-1 ring-white/[0.06] hover:bg-white/[0.07] hover:text-slate-200"
+                    }`}>
+                  <Icon size={13} className={isActive ? "text-white" : "text-slate-500"} />
+                  {agent.label}
+                </button>
+              )
+            })}
+          </div>
 
-            ${isActive
-                    ? "bg-gradient-to-r from-indigo-500 to-violet-600 text-white border-transparent shadow-[0_1px_8px_rgba(99,102,241,.35)]"
-                    : "bg-white/[0.03] text-slate-400 border-white/[0.06] hover:bg-white/[0.07]"
-                  }
-          `}>
-
-                <Icon size={14}
-                  className={
-                    isActive
-                      ? "text-white"
-                      : "text-slate-500"
-                  } />
-
-                {agent.label}
-
+          {selectedFile && (
+            <div className='px-4 pt-3'>
+              <div className='inline-flex items-center gap-2.5 rounded-xl bg-white/[0.04] ring-1 ring-white/[0.08] py-1.5 pl-1.5 pr-2.5'>
+                {filePreview
+                  ? <img src={filePreview} alt="" className="h-9 w-9 rounded-lg object-cover" />
+                  : <div className='flex h-9 w-9 items-center justify-center rounded-lg bg-rose-500/15 text-rose-300'><FileText size={16} /></div>}
+                <div className='min-w-0'>
+                  <p className='max-w-[180px] truncate text-[12px] font-medium text-slate-200'>{selectedFile.name}</p>
+                  <p className='text-[10.5px] text-slate-500'>{formatSize(selectedFile.size)}</p>
+                </div>
+                <button aria-label="Remove file" className='ml-1 rounded-md p-1 text-slate-500 hover:text-white hover:bg-white/10 cursor-pointer' onClick={clearFile}>
+                  <X size={13} />
+                </button>
               </div>
-            )
-
-          })}
-        </div>
-
-        {
-          selectedFile && <div className='my-3'>
-
-            <div className='inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2'>
-              {
-                selectedFile?.type === "application/pdf" ? <FileText size={16}
-
-                  className="text-red-400"
-                /> : selectedFile.type.startsWith("image/") && <img src={URL.createObjectURL(selectedFile)} className="h-10 w-10 rounded-xl object-cover mt-3"
-                />
-              }
-
-              <div>
-                <p className='text-xs text-white'>
-                  {selectedFile?.name}
-                </p>
-                <p className='text-[10px] text-slate-500'>
-                  {Math.ceil(selectedFile.size)}KB
-                </p>
-
-              </div>
-              <button className='ml-2' onClick={() => { setSelectedFile(null); fileRef.current.value = "" }}><X size={14} className='text-slate-500 hover:text-white' /></button>
             </div>
+          )}
 
+          <textarea
+            ref={textareaRef}
+            placeholder={selectedAgent === "auto" ? "Ask CortexAI anything..." : `Ask the ${activeAgent?.label} agent: ${activeAgent?.description.toLowerCase()}`}
+            onChange={(e) => setValue(e.target.value)}
+            onKeyDown={handleKeyDown}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
+            value={value}
+            rows={1}
+            className="block w-full bg-transparent outline-none resize-none px-4 pt-3 pb-1 text-[15px] text-slate-100 placeholder:text-slate-500 leading-relaxed scrollbar-thin min-h-[52px]"
+          />
 
-          </div>
-        }
+          <div className='flex items-center justify-between px-3 pb-3 pt-1'>
+            <div className='flex items-center gap-1'>
+              <input type="file" accept='.pdf,image/*' hidden ref={fileRef} onChange={(e) => {
+                const file = e.target.files[0]
+                if (file) {
+                  setSelectedFile(file)
+                }
+              }} />
 
-
-        <textarea
-          placeholder='Ask Anything...'
-          onChange={(e) => setValue(e.target.value)}
-          value={value}
-          className="w-full bg-transparent outline-none resize-none text-[14px] text-slate-200 placeholder:text-slate-600 leading-relaxed [scrollbar-width:none] [&::-webkit-scrollbar]:hidden disabled:opacity-50"
-          rows={3}
-        />
-        <div className='flex items-center justify-between'>
-          <div className='flex items-center gap-1'>
-
-            <input type="file" accept='.pdf,image/*' hidden ref={fileRef} onChange={(e) => {
-              const file = e.target.files[0]
-              if (file) {
-                setSelectedFile(file)
-              }
-            }} />
-
-            <button className='flex items-center justify-center w-8 h-8 rounded-lg text-slate-600 hover:text-slate-400 hover:bg-white/[0.05] border border-transparent hover:border-white/[0.06] transition-all duration-150 bg-transparent cursor-pointer' onClick={() => fileRef.current.click()}>
-              <Paperclip size={16} />
-            </button>
+              <button title="Attach a PDF or image" className='flex items-center justify-center w-9 h-9 rounded-xl text-slate-500 hover:text-slate-200 hover:bg-white/[0.06] transition-colors cursor-pointer' onClick={() => fileRef.current.click()}>
+                <Paperclip size={17} />
+              </button>
+              <button
+                title={listening ? "Stop dictation" : "Dictate"}
+                onClick={toggleMic}
+                className={`relative flex items-center justify-center w-9 h-9 rounded-xl transition-colors cursor-pointer ${listening ? "bg-rose-500/15 text-rose-300" : "text-slate-500 hover:text-slate-200 hover:bg-white/[0.06]"}`}>
+                {listening && <span className='absolute inset-0 rounded-xl ring-2 ring-rose-400/50 animate-ping' />}
+                <Mic size={17} />
+              </button>
+              <span className='hidden sm:block ml-2 text-[11px] text-slate-600'>
+                <kbd className='font-sans'>Enter</kbd> to send · <kbd className='font-sans'>Shift + Enter</kbd> for a new line
+              </span>
+            </div>
             <button
-              onClick={toggleMic}
-              className={`flex items-center justify-center w-8 h-8 rounded-lg  transition-all duration-150 cursor-pointer ${listening ?"bg-red-500 text-white":"text-slate-600 hover:bg-white/[0.05]" }`}>
-             {listening?<Mic size={16} />:<MicOff size={16}/>} 
+              aria-label="Send message"
+              disabled={!canSend}
+              onClick={handleSendMessage}
+              className={`flex items-center justify-center w-9 h-9 rounded-xl transition-all duration-200
+              ${canSend ? "bg-brand text-white shadow-[0_6px_20px_-6px_rgba(139,92,246,0.9)] hover:brightness-110 hover:scale-105 cursor-pointer" : "bg-white/[0.05] text-slate-600 cursor-not-allowed"}`}>
+              {isLoading ? <Loader2 size={17} className="animate-spin" /> : <ArrowUp size={18} strokeWidth={2.4} />}
             </button>
           </div>
-          <button
-            disabled={!value && isLoading}
-            onClick={handleSendMessage}
-            className={`flex items-center justify-center w-8 h-8 rounded-lg border-none cursor-pointer transition-all duration-150 ${value.trim() ? "bg-linear-to-br from-indigo-500 to-violet-700 hover:opacity-90 text-white" : "bg-white/[0.05] text-slate-600 cursor-not-allowed"}`}>
-          <Send size={15} />
-        </button>
+        </div>
+        <p className='mt-2 text-center text-[11px] text-slate-600'>CortexAI can make mistakes. Check important information.</p>
       </div>
     </div>
-    </div >
   )
 }
 

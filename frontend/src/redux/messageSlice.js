@@ -5,8 +5,10 @@ const messageSlice=createSlice({
     initialState:{
       messages:[],
       artifacts:[],
-      isLoading:false
-      
+      isLoading:false,
+      // Text and agent pushed into the chat input from elsewhere (e.g. suggestion cards)
+      composerPrefill:null
+
     },
     reducers:{
        setMessages:(state,action)=>{
@@ -20,13 +22,15 @@ const messageSlice=createSlice({
        },
        setIsLoading:(state,action)=>{
         state.isLoading=action.payload
+       },
+       setComposerPrefill:(state,action)=>{
+        state.composerPrefill=action.payload
        }
-      
+
 
     }
-   
+
 })
 
-export const {setMessages,addMessage,setArtifacts,setIsLoading}=messageSlice.actions 
+export const {setMessages,addMessage,setArtifacts,setIsLoading,setComposerPrefill}=messageSlice.actions
 export default messageSlice.reducer
-

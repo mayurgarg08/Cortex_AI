@@ -1,82 +1,58 @@
 import React, { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from "motion/react"
-function LoadingAnimation() {
+import { LogoMark } from './Logo'
 
-    const Thinking_Lables = ["Thinking", "Analyzing", "Reasoning", "Generating"]
+const THINKING_LABELS = ["Thinking", "Analyzing", "Reasoning", "Generating"]
+
+function LoadingAnimation() {
     const [labelIndex, setLabelIndex] = useState(0)
 
     useEffect(() => {
         const interval = setInterval(() => {
-            setLabelIndex((prev) => (prev + 1) % Thinking_Lables.length)
+            setLabelIndex((prev) => (prev + 1) % THINKING_LABELS.length)
         }, 1800)
         return () => clearInterval(interval)
     }, [])
 
-    const label = Thinking_Lables[labelIndex]
+    const label = THINKING_LABELS[labelIndex]
 
     return (
-        <div className='flex items-center gap-3 max-w-[72%] py-1'>
-            <div className='relative w-9 h-9 flex items-center justify-center shrink-0'>
-                {
-                    [0, 0.45, 0.9].map((delay, i) => (
-                        <motion.div
-                            key={i}
-                            className="absolute inset-0 rounded-full border border-cyan-400/30"
-                            initial={{ scale: 0.3, opacity: 0.55 }}
-                            animate={{ scale: 1.7, opacity: 0 }}
-                            transition={{
-                                duration: 1.8,
-                                repeat: Infinity,
-                                delay,
-                                ease: "easeOut",
-                            }}
-
-                        />
-                    ))
-                }
-
-                <motion.span
-                    className="w-2.5 h-2.5 rounded-full bg-gradient-to-br from-cyan-300 to-violet-400"
-                    style={{ boxShadow: "0 0 14px rgba(125,211,252,0.55)" }}
-                    animate={{ scale: [1, 1.25, 1] }}
-                    transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
-
-
+        <div className='flex items-center gap-3'>
+            <div className='relative w-[30px] h-[30px] shrink-0'>
+                <motion.div
+                    className='absolute -inset-1 rounded-xl bg-[conic-gradient(from_0deg,#6366f1,#a855f7,#22d3ee,#6366f1)] opacity-70 blur-[2px]'
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 2.2, repeat: Infinity, ease: "linear" }}
                 />
-            </div>
-            <div className='flex overflow-hidden'>
-                <AnimatePresence mode='wait'>
-                    <motion.div
-                        key={label}
-                        className="flex"
-                        initial={{ opacity: 0, y: 6 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -6 }}
-                        transition={{ duration: 0.25, ease: "easeOut" }}
-                    >
-                        {
-                            label.split("").map((ch, i) => (
-                                <motion.div
-                                    key={i}
-                                    className="text-[13px] font-medium tracking-wide text-slate-400"
-                                    animate={{ opacity: [0.3, 1, 0.3] }}
-                                    transition={{
-                                        duration: 1.4,
-                                        repeat: Infinity,
-                                        ease: "easeInOut",
-                                        delay: i * 0.07,
-                                    }}
-
-                                >
-                                    {ch}
-                                </motion.div>
-                            ))
-                        }
-
-                    </motion.div>
-                </AnimatePresence>
+                <LogoMark size={30} className="relative" />
             </div>
 
+            <div className='flex items-center gap-2.5 rounded-full bg-white/[0.03] px-3.5 py-1.5 ring-1 ring-white/[0.06]'>
+                <div className='flex gap-1'>
+                    {[0, 0.15, 0.3].map((delay) => (
+                        <motion.span
+                            key={delay}
+                            className='h-1.5 w-1.5 rounded-full bg-gradient-to-br from-indigo-300 to-cyan-300'
+                            animate={{ y: [0, -4, 0], opacity: [0.4, 1, 0.4] }}
+                            transition={{ duration: 0.9, repeat: Infinity, delay, ease: "easeInOut" }}
+                        />
+                    ))}
+                </div>
+                <div className='overflow-hidden h-5'>
+                    <AnimatePresence mode='wait'>
+                        <motion.span
+                            key={label}
+                            className="block text-[13px] font-medium text-gradient"
+                            initial={{ opacity: 0, y: 8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -8 }}
+                            transition={{ duration: 0.25, ease: "easeOut" }}
+                        >
+                            {label}...
+                        </motion.span>
+                    </AnimatePresence>
+                </div>
+            </div>
         </div>
     )
 }
