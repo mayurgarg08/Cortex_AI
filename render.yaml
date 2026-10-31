@@ -11,6 +11,8 @@ services:
     envVars:
       - key: FRONTEND_URL
         value: https://mayur-cortexai.online
+      - key: PUBLIC_API_URL
+        value: https://api.mayur-cortexai.online
       - key: MONGODB_URI
         sync: false
       - key: REDIS_URL

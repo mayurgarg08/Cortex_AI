@@ -36,6 +36,8 @@ app.use(
 app.use(morgan("dev"))
 app.use(cookieParser())
 app.use("/api/auth",proxy(process.env.AUTH_SERVICE))
+// Generated files are public; the random key in the URL acts as the access token
+app.use("/api/files",proxy(process.env.AGENT_SERVICE,{proxyReqPathResolver:(req)=>`/files${req.url}`}))
 app.use("/api/chat",protect,proxyWithHeader(process.env.CHAT_SERVICE))
 app.use("/api/agent",protect,proxyWithHeader(process.env.AGENT_SERVICE))
 app.use("/api/billing",protect,proxyWithHeader(process.env.BILLING_SERVICE))

@@ -1,7 +1,6 @@
 import { getModel } from "../config/llmModels.js"
 import axios from "axios"
-import { uploadToS3 } from "../utils/uploadToS3.js"
-import { getFromS3 } from "../utils/getFromS3.js"
+import { storeFile } from "../utils/storeFile.js"
 import { deductCredits } from "../utils/deductCredits.js"
 import { checkAgentLimit } from "../config/agentLimit.js"
 export const visionAgent=async (state) => {
@@ -43,13 +42,13 @@ const prompt=typeof res?.content === "string" && res.content.trim() ? res.conten
 
 const imageUrl=`https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}`
 
-const imageRes=await axios.get(imageUrl,{responseType:"arraybuffer",timeout:20000})
+const imageRes=await axios.get(imageUrl,{responseType:"arraybuffer",timeout:60000})
 const buffer=Buffer.from(imageRes.data)
 if (!buffer.length) throw new Error("Image provider returned an empty file.")
-const filename=`image-${Date.now()}.png`
+const contentType=imageRes.headers["content-type"]?.split(";")[0] || "image/jpeg"
+const filename=`image-${Date.now()}.${contentType === "image/png" ? "png" : "jpg"}`
 
-await uploadToS3(filename,buffer,"image/png")
-const downloadUrl=await getFromS3(filename,24*60)
+const downloadUrl=await storeFile(filename,buffer,contentType,24*60*60)
 await deductCredits(state.userId,"vision")
 
 return {
@@ -59,7 +58,7 @@ return {
 
 📥 [Download Image](${downloadUrl})
 
-⏳ Link expires in 10 minutes.`
+⏳ Link expires in 24 hours.`
 }
     } catch (error) {
        console.error("Image generation failed:", error?.message || error)

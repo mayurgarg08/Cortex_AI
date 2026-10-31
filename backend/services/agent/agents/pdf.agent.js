@@ -1,7 +1,6 @@
 import { getModel } from "../config/llmModels.js"
 import { generatePdf } from "../utils/generatePdf.js"
-import { getFromS3 } from "../utils/getFromS3.js"
-import { uploadToS3 } from "../utils/uploadToS3.js"
+import { storeFile } from "../utils/storeFile.js"
 import { deductCredits } from "../utils/deductCredits.js"
 import { checkAgentLimit } from "../config/agentLimit.js"
 import { parseStructuredResponse } from "../utils/parseStructuredResponse.js"
@@ -48,9 +47,7 @@ ${state.prompt}
         const pdfBuffer=await generatePdf(data)
 
         const filename=`pdf-${Date.now()}.pdf`
-        await uploadToS3(filename,pdfBuffer,"application/pdf")
-
-        const downloadUrl=await getFromS3(filename,24*60)
+        const downloadUrl=await storeFile(filename,pdfBuffer,"application/pdf",24*60*60)
         await deductCredits(state.userId,"pdf")
 
         return {
@@ -61,7 +58,7 @@ ${state.prompt}
 
 📥 [Download PDF](${downloadUrl})
 
-_Link expires in 10 minutes._`
+_Link expires in 24 hours._`
         }
 
     } catch (error) {
