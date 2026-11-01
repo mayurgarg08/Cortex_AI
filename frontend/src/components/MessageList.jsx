@@ -38,7 +38,7 @@ function EmptyState() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.1 }}
-        className='mt-6 text-center text-[28px] sm:text-[34px] font-bold tracking-tight text-white'
+        className='mt-6 text-center text-[28px] sm:text-[34px] font-bold tracking-tight text-fg'
       >
         {greeting()}{firstName ? <>, <span className='text-gradient'>{firstName}</span></> : ""}
       </motion.h1>
@@ -61,7 +61,7 @@ function EmptyState() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.45, delay: 0.25 + i * 0.05, ease: [0.22, 1, 0.36, 1] }}
               onClick={() => dispatch(setComposerPrefill({ text: agent.example, agent: agent.id }))}
-              className='group relative flex flex-col items-start gap-3 rounded-2xl bg-white/[0.025] p-4 text-left ring-1 ring-white/[0.06] transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/[0.05] hover:ring-white/[0.12] cursor-pointer'
+              className='group relative flex flex-col items-start gap-3 rounded-2xl bg-fg/[0.025] p-4 text-left ring-1 ring-fg/[0.06] transition-all duration-200 hover:-translate-y-0.5 hover:bg-fg/[0.05] hover:ring-fg/[0.12] cursor-pointer'
             >
               <div className='flex w-full items-center justify-between'>
                 <div className={`flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br ring-1 ${agent.accent}`}>
@@ -71,7 +71,7 @@ function EmptyState() {
               </div>
               <div>
                 <p className='text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500'>{agent.label}</p>
-                <p className='mt-1 text-[13.5px] leading-snug text-slate-300 group-hover:text-white transition-colors'>{agent.example}</p>
+                <p className='mt-1 text-[13.5px] leading-snug text-slate-300 group-hover:text-fg transition-colors'>{agent.example}</p>
               </div>
             </motion.button>
           )

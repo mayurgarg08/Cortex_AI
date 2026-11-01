@@ -27,7 +27,7 @@ function LoadingAnimation() {
                 <LogoMark size={30} className="relative" />
             </div>
 
-            <div className='flex items-center gap-2.5 rounded-full bg-white/[0.03] px-3.5 py-1.5 ring-1 ring-white/[0.06]'>
+            <div className='flex items-center gap-2.5 rounded-full bg-fg/[0.03] px-3.5 py-1.5 ring-1 ring-fg/[0.06]'>
                 <div className='flex gap-1'>
                     {[0, 0.15, 0.3].map((delay) => (
                         <motion.span

@@ -7,6 +7,17 @@
     <meta name="theme-color" content="#05060a" />
     <meta name="description" content="CortexAI is a multi-agent AI workspace: chat, write code with live preview, search the web, and generate PDFs, presentations and images." />
     <title>CortexAI · Your multi-agent AI workspace</title>
+    <script>
+      // Apply the saved (or system) theme before the first paint to avoid a flash
+      (function () {
+        var theme = "dark";
+        try {
+          theme = localStorage.getItem("cortex-theme") || (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+        } catch (e) {}
+        document.documentElement.dataset.theme = theme;
+        if (theme === "light") document.querySelector('meta[name="theme-color"]').setAttribute("content", "#f4f5f9");
+      })();
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />

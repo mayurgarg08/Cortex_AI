@@ -166,7 +166,7 @@ function ChatInput() {
     <div className='relative z-10 shrink-0 px-3 sm:px-6 pb-4 pt-2'>
       <div className='mx-auto w-full max-w-3xl'>
         <div className={`relative rounded-3xl bg-ink-850/90 backdrop-blur-xl ring-1 transition-all duration-300
-          ${focused ? "ring-violet-400/40 shadow-[0_0_0_4px_rgba(139,92,246,0.08),0_20px_60px_-20px_rgba(139,92,246,0.45)]" : "ring-white/[0.08] shadow-[0_20px_50px_-25px_rgba(0,0,0,0.8)]"}`}>
+          ${focused ? "ring-violet-400/40 shadow-[0_0_0_4px_rgba(139,92,246,0.08),0_20px_60px_-20px_rgba(139,92,246,0.45)]" : "ring-fg/[0.08] shadow-[0_20px_50px_-25px_rgba(0,0,0,0.8)]"}`}>
 
           <div className='flex gap-1.5 overflow-x-auto scrollbar-none px-3 pt-3'>
             {AGENTS.map((agent) => {
@@ -180,7 +180,7 @@ function ChatInput() {
                   className={`shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-medium transition-all duration-200 cursor-pointer
                   ${isActive
                       ? "bg-brand text-white shadow-[0_4px_16px_-4px_rgba(139,92,246,0.7)]"
-                      : "text-slate-400 bg-white/[0.03] ring-1 ring-white/[0.06] hover:bg-white/[0.07] hover:text-slate-200"
+                      : "text-slate-400 bg-fg/[0.03] ring-1 ring-fg/[0.06] hover:bg-fg/[0.07] hover:text-slate-200"
                     }`}>
                   <Icon size={13} className={isActive ? "text-white" : "text-slate-500"} />
                   {agent.label}
@@ -191,7 +191,7 @@ function ChatInput() {
 
           {selectedFile && (
             <div className='px-4 pt-3'>
-              <div className='inline-flex items-center gap-2.5 rounded-xl bg-white/[0.04] ring-1 ring-white/[0.08] py-1.5 pl-1.5 pr-2.5'>
+              <div className='inline-flex items-center gap-2.5 rounded-xl bg-fg/[0.04] ring-1 ring-fg/[0.08] py-1.5 pl-1.5 pr-2.5'>
                 {filePreview
                   ? <img src={filePreview} alt="" className="h-9 w-9 rounded-lg object-cover" />
                   : <div className='flex h-9 w-9 items-center justify-center rounded-lg bg-rose-500/15 text-rose-300'><FileText size={16} /></div>}
@@ -199,7 +199,7 @@ function ChatInput() {
                   <p className='max-w-[180px] truncate text-[12px] font-medium text-slate-200'>{selectedFile.name}</p>
                   <p className='text-[10.5px] text-slate-500'>{formatSize(selectedFile.size)}</p>
                 </div>
-                <button aria-label="Remove file" className='ml-1 rounded-md p-1 text-slate-500 hover:text-white hover:bg-white/10 cursor-pointer' onClick={clearFile}>
+                <button aria-label="Remove file" className='ml-1 rounded-md p-1 text-slate-500 hover:text-fg hover:bg-fg/10 cursor-pointer' onClick={clearFile}>
                   <X size={13} />
                 </button>
               </div>
@@ -227,13 +227,13 @@ function ChatInput() {
                 }
               }} />
 
-              <button title="Attach a PDF or image" className='flex items-center justify-center w-9 h-9 rounded-xl text-slate-500 hover:text-slate-200 hover:bg-white/[0.06] transition-colors cursor-pointer' onClick={() => fileRef.current.click()}>
+              <button title="Attach a PDF or image" className='flex items-center justify-center w-9 h-9 rounded-xl text-slate-500 hover:text-slate-200 hover:bg-fg/[0.06] transition-colors cursor-pointer' onClick={() => fileRef.current.click()}>
                 <Paperclip size={17} />
               </button>
               <button
                 title={listening ? "Stop dictation" : "Dictate"}
                 onClick={toggleMic}
-                className={`relative flex items-center justify-center w-9 h-9 rounded-xl transition-colors cursor-pointer ${listening ? "bg-rose-500/15 text-rose-300" : "text-slate-500 hover:text-slate-200 hover:bg-white/[0.06]"}`}>
+                className={`relative flex items-center justify-center w-9 h-9 rounded-xl transition-colors cursor-pointer ${listening ? "bg-rose-500/15 text-rose-300" : "text-slate-500 hover:text-slate-200 hover:bg-fg/[0.06]"}`}>
                 {listening && <span className='absolute inset-0 rounded-xl ring-2 ring-rose-400/50 animate-ping' />}
                 <Mic size={17} />
               </button>
@@ -246,7 +246,7 @@ function ChatInput() {
               disabled={!canSend}
               onClick={handleSendMessage}
               className={`flex items-center justify-center w-9 h-9 rounded-xl transition-all duration-200
-              ${canSend ? "bg-brand text-white shadow-[0_6px_20px_-6px_rgba(139,92,246,0.9)] hover:brightness-110 hover:scale-105 cursor-pointer" : "bg-white/[0.05] text-slate-600 cursor-not-allowed"}`}>
+              ${canSend ? "bg-brand text-white shadow-[0_6px_20px_-6px_rgba(139,92,246,0.9)] hover:brightness-110 hover:scale-105 cursor-pointer" : "bg-fg/[0.05] text-slate-600 cursor-not-allowed"}`}>
               {isLoading ? <Loader2 size={17} className="animate-spin" /> : <ArrowUp size={18} strokeWidth={2.4} />}
             </button>
           </div>

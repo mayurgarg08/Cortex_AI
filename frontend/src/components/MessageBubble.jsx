@@ -56,11 +56,11 @@ function MessageBubble({ role, content, images }) {
   }, [lightBox])
 
   const markdownComponents = {
-    h1: ({ children }) => <h1 className='text-[22px] font-bold text-white mt-6 mb-3 first:mt-0'>{children}</h1>,
-    h2: ({ children }) => <h2 className='text-[18px] font-semibold text-white mt-5 mb-2.5 first:mt-0'>{children}</h2>,
+    h1: ({ children }) => <h1 className='text-[22px] font-bold text-fg mt-6 mb-3 first:mt-0'>{children}</h1>,
+    h2: ({ children }) => <h2 className='text-[18px] font-semibold text-fg mt-5 mb-2.5 first:mt-0'>{children}</h2>,
     h3: ({ children }) => isReadyHeading(textOf(children))
       ? (
-        <h3 className='flex items-center gap-2 text-[16px] font-semibold text-white mt-4 mb-2.5 first:mt-0'>
+        <h3 className='flex items-center gap-2 text-[16px] font-semibold text-fg mt-4 mb-2.5 first:mt-0'>
           <span className='flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/15 ring-1 ring-emerald-400/30'>
             <Check size={13} className="text-emerald-300" strokeWidth={3} />
           </span>
@@ -69,18 +69,18 @@ function MessageBubble({ role, content, images }) {
       )
       : <h3 className='text-[16px] font-semibold text-slate-100 mt-4 mb-2 first:mt-0'>{children}</h3>,
     p: ({ children }) => <p className='mb-3 last:mb-0 whitespace-pre-wrap break-words'>{children}</p>,
-    strong: ({ children }) => <strong className='font-semibold text-white'>{children}</strong>,
+    strong: ({ children }) => <strong className='font-semibold text-fg'>{children}</strong>,
     ul: ({ children }) => <ul className='list-disc marker:text-violet-400/70 pl-5 space-y-1.5 my-3'>{children}</ul>,
     ol: ({ children }) => <ol className='list-decimal marker:text-violet-400/70 pl-5 space-y-1.5 my-3'>{children}</ol>,
     blockquote: ({ children }) => <blockquote className='my-3 border-l-2 border-violet-400/50 bg-violet-500/[0.05] rounded-r-lg pl-4 pr-3 py-2 text-slate-300'>{children}</blockquote>,
-    hr: () => <hr className='my-5 border-white/[0.08]' />,
+    hr: () => <hr className='my-5 border-fg/[0.08]' />,
     table: ({ children }) => (
-      <div className='overflow-x-auto scrollbar-thin my-4 rounded-xl ring-1 ring-white/[0.08]'>
+      <div className='overflow-x-auto scrollbar-thin my-4 rounded-xl ring-1 ring-fg/[0.08]'>
         <table className='min-w-full text-[13.5px]'>{children}</table>
       </div>
     ),
-    th: ({ children }) => <th className='border-b border-white/[0.08] bg-white/[0.04] px-3.5 py-2.5 text-left font-semibold text-slate-200'>{children}</th>,
-    td: ({ children }) => <td className='border-b border-white/[0.05] px-3.5 py-2.5'>{children}</td>,
+    th: ({ children }) => <th className='border-b border-fg/[0.08] bg-fg/[0.04] px-3.5 py-2.5 text-left font-semibold text-slate-200'>{children}</th>,
+    td: ({ children }) => <td className='border-b border-fg/[0.05] px-3.5 py-2.5'>{children}</td>,
 
     a: ({ href, children }) => {
       if (isGeneratedFileLink(href)) {
@@ -88,7 +88,7 @@ function MessageBubble({ role, content, images }) {
         const { icon: Icon, tint, name } = fileCardStyle(label)
         return (
           <a href={href} target="_blank" rel="noreferrer"
-            className='group my-1 flex w-full max-w-sm items-center gap-3 rounded-2xl bg-white/[0.04] p-3 no-underline ring-1 ring-white/[0.08] transition-all hover:bg-white/[0.07] hover:ring-violet-400/30'>
+            className='group my-1 flex w-full max-w-md items-center gap-3 rounded-2xl bg-fg/[0.04] p-3 no-underline ring-1 ring-fg/[0.08] transition-all hover:bg-fg/[0.07] hover:ring-violet-400/30'>
             <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${tint}`}>
               <Icon size={19} />
             </span>
@@ -123,13 +123,13 @@ function MessageBubble({ role, content, images }) {
 
       const language = className ? className.replace("language-", "") : "text"
       return (
-        <div className='my-4 overflow-hidden rounded-xl ring-1 ring-white/[0.08] bg-[#0b0e14] shadow-xl shadow-black/30'>
-          <div className='flex items-center justify-between bg-white/[0.03] border-b border-white/[0.06] px-4 py-2'>
+        <div className='force-dark my-4 overflow-hidden rounded-xl ring-1 ring-fg/[0.08] bg-[#0b0e14] shadow-xl shadow-black/30'>
+          <div className='flex items-center justify-between bg-fg/[0.03] border-b border-fg/[0.06] px-4 py-2'>
             <div className='flex items-center gap-2'>
               <span className='flex gap-1.5'>
-                <span className='h-2.5 w-2.5 rounded-full bg-white/10' />
-                <span className='h-2.5 w-2.5 rounded-full bg-white/10' />
-                <span className='h-2.5 w-2.5 rounded-full bg-white/10' />
+                <span className='h-2.5 w-2.5 rounded-full bg-fg/10' />
+                <span className='h-2.5 w-2.5 rounded-full bg-fg/10' />
+                <span className='h-2.5 w-2.5 rounded-full bg-fg/10' />
               </span>
               <span className='ml-1.5 font-mono text-[11px] lowercase text-slate-400'>{language}</span>
             </div>
@@ -158,7 +158,7 @@ function MessageBubble({ role, content, images }) {
           onClick={() => setLightBox(src)}
           loading="lazy"
           onError={(e) => e.currentTarget.remove()}
-          className="my-2 w-full max-w-md rounded-2xl ring-1 ring-white/10 shadow-2xl shadow-black/40 cursor-zoom-in hover:opacity-95 transition"
+          className="my-2 w-full max-w-md rounded-2xl ring-1 ring-fg/10 shadow-2xl shadow-black/40 cursor-zoom-in hover:opacity-95 transition"
         />
       )
     },
@@ -189,7 +189,7 @@ function MessageBubble({ role, content, images }) {
                   onClick={() => setLightBox(img)}
                   loading="lazy"
                   onError={(e) => e.currentTarget.remove()}
-                  className="w-40 h-28 shrink-0 rounded-xl object-cover ring-1 ring-white/10 cursor-zoom-in hover:opacity-90 transition"
+                  className="w-40 h-28 shrink-0 rounded-xl object-cover ring-1 ring-fg/10 cursor-zoom-in hover:opacity-90 transition"
                 />
               ))}
             </div>
@@ -202,20 +202,20 @@ function MessageBubble({ role, content, images }) {
 
         {!isUser && (
           <div className='mt-2 flex opacity-0 group-hover:opacity-100 transition-opacity'>
-            <CopyButton text={messageContent} className="rounded-lg px-2 py-1 text-slate-500 hover:text-slate-200 hover:bg-white/[0.05]" />
+            <CopyButton text={messageContent} className="rounded-lg px-2 py-1 text-slate-500 hover:text-slate-200 hover:bg-fg/[0.05]" />
           </div>
         )}
       </div>
 
       {lightBox &&
-        <div onClick={() => setLightBox(null)} className='fixed inset-0 z-[60] bg-black/85 backdrop-blur-md flex items-center justify-center p-6'>
+        <div onClick={() => setLightBox(null)} className='force-dark fixed inset-0 z-[60] bg-black/85 backdrop-blur-md flex items-center justify-center p-6'>
           <div className='absolute top-5 right-5 flex gap-2'>
             <a href={lightBox} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}
-              className='flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white/80 hover:bg-white/20 hover:text-white transition'>
+              className='flex h-10 w-10 items-center justify-center rounded-full bg-fg/10 text-fg/80 hover:bg-fg/20 hover:text-white transition'>
               <ExternalLink size={17} />
             </a>
             <button onClick={() => setLightBox(null)}
-              className='flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white/80 hover:bg-white/20 hover:text-white transition cursor-pointer'>
+              className='flex h-10 w-10 items-center justify-center rounded-full bg-fg/10 text-fg/80 hover:bg-fg/20 hover:text-white transition cursor-pointer'>
               <X size={18} />
             </button>
           </div>
@@ -223,7 +223,7 @@ function MessageBubble({ role, content, images }) {
             src={lightBox}
             alt=""
             onClick={(e) => e.stopPropagation()}
-            className="max-w-[92vw] max-h-[86vh] rounded-2xl ring-1 ring-white/10 shadow-2xl object-contain"
+            className="max-w-[92vw] max-h-[86vh] rounded-2xl ring-1 ring-fg/10 shadow-2xl object-contain"
           />
         </div>}
     </div>

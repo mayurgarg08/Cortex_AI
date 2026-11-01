@@ -23,7 +23,7 @@ function Logo({ size = 30, className = "" }) {
   return (
     <div className={`flex items-center gap-2.5 ${className}`}>
       <LogoMark size={size} className="drop-shadow-[0_0_14px_rgba(139,92,246,0.45)]" />
-      <span className='text-[17px] font-bold tracking-tight text-white'>
+      <span className='text-[17px] font-bold tracking-tight text-fg'>
         Cortex<span className='text-gradient'>AI</span>
       </span>
     </div>

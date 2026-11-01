@@ -1,6 +1,7 @@
 import { Check, Code2, Copy, Eye, PanelRightClose, PanelRightOpen, X } from 'lucide-react'
 import React, { useState } from 'react'
 import { useSelector } from 'react-redux'
+import { useTheme } from '../theme'
 import { AnimatePresence, easeInOut, motion } from "motion/react"
 import Editor from '@monaco-editor/react';
 
@@ -57,6 +58,7 @@ const fileDotColor = (fileName = "") => {
 function Artifact() {
   const [collapsed, setCollapsed] = useState(false)
   const { artifacts } = useSelector(state => state.message)
+  const theme = useTheme()
   const [tab, setTab] = useState("code")
   const [activeFile, setActiveFile] = useState(0)
   const [copied, setCopied] = useState(false)
@@ -115,8 +117,8 @@ function Artifact() {
   const renderPanel = (onClose) => (
     <div className='flex flex-col h-full bg-ink-900'>
 
-      <div className='h-14 px-3 border-b border-white/[0.06] flex items-center gap-2.5 shrink-0'>
-        <button title={onClose ? "Close" : "Collapse panel"} className='flex items-center justify-center w-8 h-8 rounded-lg text-slate-500 hover:text-slate-100 hover:bg-white/[0.06] transition-colors cursor-pointer shrink-0' onClick={onClose ?? (() => setCollapsed(true))}>
+      <div className='h-14 px-3 border-b border-fg/[0.06] flex items-center gap-2.5 shrink-0'>
+        <button title={onClose ? "Close" : "Collapse panel"} className='flex items-center justify-center w-8 h-8 rounded-lg text-slate-500 hover:text-slate-100 hover:bg-fg/[0.06] transition-colors cursor-pointer shrink-0' onClick={onClose ?? (() => setCollapsed(true))}>
           {onClose ? <X size={16} /> : <PanelRightClose size={17} />}
         </button>
         <div className='flex items-center gap-2 flex-1 min-w-0'>
@@ -129,18 +131,18 @@ function Artifact() {
         <button
           title="Copy file"
           onClick={handleCopy}
-          className='flex items-center justify-center w-8 h-8 text-slate-400 hover:text-white hover:bg-white/[0.06] rounded-lg transition-colors cursor-pointer shrink-0'
+          className='flex items-center justify-center w-8 h-8 text-slate-400 hover:text-fg hover:bg-fg/[0.06] rounded-lg transition-colors cursor-pointer shrink-0'
         >
           {copied ? <Check size={15} className="text-emerald-400" /> : <Copy size={15} />}
         </button>
         {canPreview &&
-          <div className='flex items-center gap-0.5 bg-white/[0.04] ring-1 ring-white/[0.06] p-0.5 rounded-lg shrink-0'>
+          <div className='flex items-center gap-0.5 bg-fg/[0.04] ring-1 ring-fg/[0.06] p-0.5 rounded-lg shrink-0'>
             {tabButton("code", Code2, "Code")}
             {tabButton("preview", Eye, "Preview")}
           </div>}
       </div>
 
-      {tab === "code" && <div className='flex border-b border-white/[0.06] overflow-x-auto scrollbar-none shrink-0 px-1'>
+      {tab === "code" && <div className='flex border-b border-fg/[0.06] overflow-x-auto scrollbar-none shrink-0 px-1'>
         {
           files.map((f, index) => (
             <button
@@ -164,12 +166,12 @@ function Artifact() {
           transition={{ duration: 0.4 }}
           className='w-full h-full p-3'
         >
-          <div className='flex h-full flex-col overflow-hidden rounded-xl ring-1 ring-white/10'>
+          <div className='flex h-full flex-col overflow-hidden rounded-xl ring-1 ring-fg/10'>
             <div className='flex items-center gap-1.5 bg-ink-800 px-3 py-2'>
               <span className='h-2.5 w-2.5 rounded-full bg-rose-400/70' />
               <span className='h-2.5 w-2.5 rounded-full bg-amber-400/70' />
               <span className='h-2.5 w-2.5 rounded-full bg-emerald-400/70' />
-              <span className='ml-2 flex-1 truncate rounded-md bg-white/[0.05] px-2.5 py-0.5 text-[11px] text-slate-500'>preview · index.html</span>
+              <span className='ml-2 flex-1 truncate rounded-md bg-fg/[0.05] px-2.5 py-0.5 text-[11px] text-slate-500'>preview · index.html</span>
             </div>
             <iframe title='preview' srcDoc={previewDoc} sandbox='allow-scripts' className='w-full flex-1 bg-white' />
           </div>
@@ -182,13 +184,21 @@ function Artifact() {
             className='w-full h-full'
           >
             <Editor
-              beforeMount={(monaco) => monaco.editor.defineTheme("cortex", {
-                base: "vs-dark",
-                inherit: true,
-                rules: [],
-                colors: { "editor.background": "#090b11", "editorGutter.background": "#090b11", "editor.lineHighlightBackground": "#ffffff08" },
-              })}
-              theme="cortex"
+              beforeMount={(monaco) => {
+                monaco.editor.defineTheme("cortex-dark", {
+                  base: "vs-dark",
+                  inherit: true,
+                  rules: [],
+                  colors: { "editor.background": "#090b11", "editorGutter.background": "#090b11", "editor.lineHighlightBackground": "#ffffff08" },
+                })
+                monaco.editor.defineTheme("cortex-light", {
+                  base: "vs",
+                  inherit: true,
+                  rules: [],
+                  colors: { "editor.background": "#ffffff", "editorGutter.background": "#ffffff", "editor.lineHighlightBackground": "#0f172a08" },
+                })
+              }}
+              theme={theme === "light" ? "cortex-light" : "cortex-dark"}
               language={detectLanguage(file?.name)}
               value={file?.content}
               options={{ readOnly: true, minimap: { enabled: false }, fontSize: 13, fontFamily: "'JetBrains Mono', monospace", wordWrap: "on", automaticLayout: true, scrollBeyondLastLine: false, padding: { top: 16 }, lineNumbers: "on", renderLineHighlight: "none" }}
@@ -218,7 +228,7 @@ function Artifact() {
         {mobileOpen && <>
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} onClick={() => setMobileOpen(false)} className="lg:hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm" />
 
-          <motion.div initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }} transition={{ duration: 0.25, ease: "easeInOut" }} className="lg:hidden fixed inset-y-0 right-0 z-50 w-[92vw] max-w-[460px] border-l border-white/[0.06] overflow-hidden">
+          <motion.div initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }} transition={{ duration: 0.25, ease: "easeInOut" }} className="lg:hidden fixed inset-y-0 right-0 z-50 w-[92vw] max-w-[460px] border-l border-fg/[0.06] overflow-hidden">
             {renderPanel(() => setMobileOpen(false))}
           </motion.div>
 
@@ -235,11 +245,11 @@ function Artifact() {
           duration: 0.25,
           ease: easeInOut
         }}
-        className='hidden lg:flex relative z-10 h-full border-l border-white/[0.06] flex-col overflow-hidden shrink-0'>
+        className='hidden lg:flex relative z-10 h-full border-l border-fg/[0.06] flex-col overflow-hidden shrink-0'>
 
         {collapsed ?
           <div className='flex h-full bg-ink-900/80 flex-col items-center py-4 gap-4'>
-            <button title="Expand panel" className='flex items-center justify-center w-8 h-8 rounded-lg text-slate-500 hover:text-slate-100 hover:bg-white/[0.06] transition-colors cursor-pointer shrink-0' onClick={() => setCollapsed(false)}>
+            <button title="Expand panel" className='flex items-center justify-center w-8 h-8 rounded-lg text-slate-500 hover:text-slate-100 hover:bg-fg/[0.06] transition-colors cursor-pointer shrink-0' onClick={() => setCollapsed(false)}>
               <PanelRightOpen size={17} />
             </button>
             <div className='flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-500/10 ring-1 ring-emerald-400/20'>

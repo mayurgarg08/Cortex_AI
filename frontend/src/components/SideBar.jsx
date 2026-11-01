@@ -8,6 +8,7 @@ import logOut from '../features/logOut'
 import { setUserdata } from '../redux/userSlice'
 import BillingDrawer from './BillingDrawer'
 import Logo, { LogoMark } from './Logo'
+import ThemeToggle from "./ThemeToggle"
 
 // Buckets conversations by how recently they were updated
 const groupConversations = (conversations) => {
@@ -97,16 +98,17 @@ function SideBar() {
     const totalCredits = userData?.totalCredits || 100
     const creditPercent = Math.min(100, Math.max(0, (credits / totalCredits) * 100))
 
-    const iconButton = 'flex items-center justify-center w-8 h-8 rounded-lg text-slate-500 hover:text-slate-100 hover:bg-white/[0.06] transition-colors duration-150 cursor-pointer'
+    const iconButton = 'flex items-center justify-center w-8 h-8 rounded-lg text-slate-500 hover:text-slate-100 hover:bg-fg/[0.06] transition-colors duration-150 cursor-pointer'
 
     if (collapsed) {
         return (
             <>
-                <div className='hidden lg:flex relative z-10 flex-col items-center w-[64px] h-dvh bg-ink-900/80 border-r border-white/[0.06] py-4 gap-2 shrink-0'>
+                <div className='hidden lg:flex relative z-10 flex-col items-center w-[64px] h-dvh bg-ink-900/80 border-r border-fg/[0.06] py-4 gap-2 shrink-0'>
                     <LogoMark size={30} className="mb-2" />
                     <button title="Expand sidebar" className={iconButton} onClick={() => setCollapsed(false)}>
                         <PanelLeftOpen size={17} />
                     </button>
+                    <ThemeToggle />
                     <button title="New chat" className='flex items-center justify-center w-9 h-9 rounded-xl bg-brand text-white shadow-lg shadow-violet-900/40 hover:brightness-110 transition cursor-pointer' onClick={startNewChat}>
                         <Plus size={17} />
                     </button>
@@ -120,7 +122,7 @@ function SideBar() {
                                     title={conv?.title || "New Chat"}
                                     onClick={() => openConversation(conv)}
                                     className={`flex items-center justify-center w-9 h-9 shrink-0 rounded-xl transition-colors cursor-pointer
-                                    ${isActive ? "bg-violet-500/15 text-violet-300 ring-1 ring-violet-400/25" : "text-slate-500 hover:bg-white/[0.05] hover:text-slate-300"}`}>
+                                    ${isActive ? "bg-violet-500/15 text-violet-300 ring-1 ring-violet-400/25" : "text-slate-500 hover:bg-fg/[0.05] hover:text-slate-300"}`}>
                                     <MessageSquare size={15} />
                                 </button>
                             )
@@ -139,7 +141,7 @@ function SideBar() {
 
     return (
         <>
-            <button aria-label="Open menu" className='lg:hidden fixed top-3 left-3 z-30 flex items-center justify-center w-9 h-9 rounded-xl glass text-slate-300 hover:text-white transition-colors cursor-pointer' onClick={() => setMobileOpen(true)}>
+            <button aria-label="Open menu" className='lg:hidden fixed top-3 left-3 z-30 flex items-center justify-center w-9 h-9 rounded-xl glass text-slate-300 hover:text-fg transition-colors cursor-pointer' onClick={() => setMobileOpen(true)}>
                 <Menu size={17} />
             </button>
 
@@ -147,18 +149,21 @@ function SideBar() {
 
             <aside className={`fixed lg:static inset-y-0 left-0 z-50 lg:z-10
                 w-[284px] h-dvh shrink-0 flex flex-col
-                bg-ink-900/95 lg:bg-ink-900/80 backdrop-blur-xl border-r border-white/[0.06]
+                bg-ink-900/95 lg:bg-ink-900/80 backdrop-blur-xl border-r border-fg/[0.06]
                 transition-transform duration-300 ease-out
                 ${mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
             >
                 <div className='flex items-center justify-between px-4 pt-4 pb-3'>
                     <Logo size={28} />
+                    <div className="flex items-center gap-0.5">
+                    <ThemeToggle />
                     <button title="Collapse sidebar" className={`${iconButton} hidden lg:flex`} onClick={() => setCollapsed(true)}>
                         <PanelLeftClose size={17} />
                     </button>
                     <button aria-label="Close menu" className={`${iconButton} lg:hidden`} onClick={() => setMobileOpen(false)}>
                         <X size={17} />
                     </button>
+                    </div>
                 </div>
 
                 <div className='px-3 space-y-2.5'>
@@ -170,7 +175,7 @@ function SideBar() {
                         New chat
                     </button>
 
-                    <div className='flex items-center gap-2 rounded-xl bg-white/[0.03] px-3 py-2 ring-1 ring-white/[0.06] focus-within:ring-violet-400/40 transition'>
+                    <div className='flex items-center gap-2 rounded-xl bg-fg/[0.03] px-3 py-2 ring-1 ring-fg/[0.06] focus-within:ring-violet-400/40 transition'>
                         <Search size={14} className="text-slate-500 shrink-0" />
                         <input
                             value={query}
@@ -185,7 +190,7 @@ function SideBar() {
                 <nav className='flex-1 overflow-y-auto scrollbar-thin px-2 pt-3 pb-2'>
                     {groups.length == 0 && (
                         <div className='mx-2 mt-6 flex flex-col items-center gap-2 text-center'>
-                            <div className='flex h-10 w-10 items-center justify-center rounded-xl bg-white/[0.04] text-slate-600'>
+                            <div className='flex h-10 w-10 items-center justify-center rounded-xl bg-fg/[0.04] text-slate-600'>
                                 <MessageSquare size={17} />
                             </div>
                             <p className='text-[12.5px] text-slate-500'>{query ? "No chats match your search" : "Your conversations will appear here"}</p>
@@ -204,7 +209,7 @@ function SideBar() {
                                         key={conv?._id}
                                         onClick={() => openConversation(conv)}
                                         className={`relative w-full flex items-center gap-2.5 text-left cursor-pointer mb-0.5 px-3 py-2 rounded-xl transition-colors duration-150
-                                        ${isActive ? "bg-white/[0.06] text-white" : "text-slate-400 hover:bg-white/[0.035] hover:text-slate-200"}`}>
+                                        ${isActive ? "bg-fg/[0.06] text-fg" : "text-slate-400 hover:bg-fg/[0.035] hover:text-slate-200"}`}>
                                         {isActive && <span className='absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-gradient-to-b from-indigo-400 to-cyan-400' />}
                                         <MessageSquare size={14} className={isActive ? "text-violet-300 shrink-0" : "text-slate-600 shrink-0"} />
                                         <span className='text-[13px] font-medium truncate'>
@@ -217,19 +222,19 @@ function SideBar() {
                     ))}
                 </nav>
 
-                <div className='p-3 space-y-2 border-t border-white/[0.06]'>
+                <div className='p-3 space-y-2 border-t border-fg/[0.06]'>
                     <button
                         onClick={() => setShowBilling(true)}
-                        className='group w-full rounded-xl bg-gradient-to-br from-indigo-500/10 via-violet-500/[0.07] to-cyan-500/[0.06] p-3 text-left ring-1 ring-white/[0.07] hover:ring-violet-400/30 transition cursor-pointer'
+                        className='group w-full rounded-xl bg-gradient-to-br from-indigo-500/10 via-violet-500/[0.07] to-cyan-500/[0.06] p-3 text-left ring-1 ring-fg/[0.07] hover:ring-violet-400/30 transition cursor-pointer'
                     >
                         <div className='flex items-center justify-between'>
                             <span className='flex items-center gap-1.5 text-[12px] font-semibold text-slate-200'>
                                 <Sparkles size={13} className="text-amber-300" />
                                 <span className='capitalize'>{userData?.plan || "free"}</span> plan
                             </span>
-                            <span className='text-[11px] font-semibold text-violet-300 group-hover:text-white transition-colors'>Upgrade</span>
+                            <span className='text-[11px] font-semibold text-violet-300 group-hover:text-fg transition-colors'>Upgrade</span>
                         </div>
-                        <div className='mt-2.5 h-1.5 rounded-full bg-white/[0.06] overflow-hidden'>
+                        <div className='mt-2.5 h-1.5 rounded-full bg-fg/[0.06] overflow-hidden'>
                             <div className='h-full rounded-full bg-gradient-to-r from-indigo-400 via-violet-400 to-cyan-300 transition-all duration-500' style={{ width: `${creditPercent}%` }} />
                         </div>
                         <p className='mt-1.5 text-[11px] text-slate-500'>{credits} of {totalCredits} credits left</p>

@@ -4,7 +4,10 @@
   --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
-  /* Surfaces, darkest to lightest */
+  /* Foreground base: text and translucent overlays (bg-fg/5, ring-fg/10...). Flips with the theme. */
+  --color-fg: #ffffff;
+
+  /* Surfaces, darkest to lightest (in dark mode) */
   --color-ink-950: #05060a;
   --color-ink-900: #090b11;
   --color-ink-850: #0d1017;
@@ -30,17 +33,101 @@
   }
 }
 
+/*
+  Light theme: the UI is written with dark-mode classes, so light mode remaps the
+  colours those classes use. Surfaces become light, the slate text scale is inverted
+  and pale accent shades are swapped for darker ones that read well on white.
+*/
+:root[data-theme="light"] {
+  color-scheme: light;
+  --color-fg: #0f172a;
+
+  --color-ink-950: #f4f5f9;
+  --color-ink-900: #ffffff;
+  --color-ink-850: #ffffff;
+  --color-ink-800: #eef1f6;
+  --color-ink-700: #e2e6ee;
+
+  --color-slate-100: #0f172a;
+  --color-slate-200: #1e293b;
+  --color-slate-300: #334155;
+  --color-slate-400: #475569;
+  --color-slate-500: #64748b;
+  --color-slate-600: #94a3b8;
+
+  --color-indigo-200: #4338ca;
+  --color-indigo-300: #4f46e5;
+  --color-indigo-400: #6366f1;
+  --color-violet-200: #6d28d9;
+  --color-violet-300: #7c3aed;
+  --color-violet-400: #8b5cf6;
+  --color-cyan-300: #0891b2;
+  --color-sky-300: #0284c7;
+  --color-emerald-300: #059669;
+  --color-emerald-400: #059669;
+  --color-amber-300: #d97706;
+  --color-amber-400: #d97706;
+  --color-rose-300: #e11d48;
+  --color-rose-400: #e11d48;
+  --color-fuchsia-300: #c026d3;
+}
+
+/* Areas that stay dark in both themes (code blocks, image lightbox) */
+:root,
+.force-dark {
+  color-scheme: dark;
+}
+.force-dark {
+  color: #e2e8f0;
+  --color-fg: #ffffff;
+
+  --color-ink-950: #05060a;
+  --color-ink-900: #090b11;
+  --color-ink-850: #0d1017;
+  --color-ink-800: #12151e;
+  --color-ink-700: #1a1e2a;
+
+  --color-slate-100: #f1f5f9;
+  --color-slate-200: #e2e8f0;
+  --color-slate-300: #cbd5e1;
+  --color-slate-400: #94a3b8;
+  --color-slate-500: #64748b;
+  --color-slate-600: #475569;
+
+  --color-indigo-200: #c7d2fe;
+  --color-indigo-300: #a5b4fc;
+  --color-indigo-400: #818cf8;
+  --color-violet-200: #ddd6fe;
+  --color-violet-300: #c4b5fd;
+  --color-violet-400: #a78bfa;
+  --color-cyan-300: #67e8f9;
+  --color-sky-300: #7dd3fc;
+  --color-emerald-300: #6ee7b7;
+  --color-emerald-400: #34d399;
+  --color-amber-300: #fcd34d;
+  --color-amber-400: #fbbf24;
+  --color-rose-300: #fda4af;
+  --color-rose-400: #fb7185;
+  --color-fuchsia-300: #f0abfc;
+}
+
 html,
 body {
   background: var(--color-ink-950);
-  color: #e2e8f0;
+  color: var(--color-slate-200);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Smooth colour change when switching themes (only while the switch happens) */
+html.theme-transition,
+html.theme-transition * {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease !important;
+}
+
 ::selection {
   background: rgba(139, 92, 246, 0.35);
-  color: #fff;
+  color: var(--color-fg);
 }
 
 @layer components {
@@ -51,6 +138,9 @@ body {
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
+  }
+  :root[data-theme="light"] .text-gradient {
+    background-image: linear-gradient(100deg, #4f46e5 0%, #7c3aed 35%, #0891b2 70%, #4f46e5 100%);
   }
   /* Use together with .text-gradient */
   .text-gradient-animated {
@@ -63,10 +153,17 @@ body {
 
   /* Frosted glass panel */
   .glass {
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.02));
-    border: 1px solid rgba(255, 255, 255, 0.07);
+    background: linear-gradient(180deg,
+      color-mix(in srgb, var(--color-fg) 4.5%, transparent),
+      color-mix(in srgb, var(--color-fg) 2%, transparent));
+    border: 1px solid color-mix(in srgb, var(--color-fg) 7%, transparent);
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
+  }
+  :root[data-theme="light"] .glass {
+    background: rgba(255, 255, 255, 0.7);
+    border-color: rgba(15, 23, 42, 0.08);
+    box-shadow: 0 8px 30px -12px rgba(15, 23, 42, 0.15);
   }
 
   /* 1px gradient border, applied with a mask so the fill stays transparent */
@@ -88,7 +185,7 @@ body {
 
   /* Faint dot grid used behind hero areas */
   .bg-grid {
-    background-image: radial-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px);
+    background-image: radial-gradient(color-mix(in srgb, var(--color-fg) 7%, transparent) 1px, transparent 1px);
     background-size: 22px 22px;
   }
 
@@ -101,19 +198,24 @@ body {
 
   .scrollbar-thin {
     scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+    scrollbar-color: color-mix(in srgb, var(--color-fg) 10%, transparent) transparent;
   }
   .scrollbar-thin::-webkit-scrollbar {
     width: 8px;
     height: 8px;
   }
   .scrollbar-thin::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.08);
+    background: color-mix(in srgb, var(--color-fg) 8%, transparent);
     border-radius: 999px;
   }
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.16);
+    background: color-mix(in srgb, var(--color-fg) 16%, transparent);
   }
+}
+
+/* Softer background glow on light surfaces */
+:root[data-theme="light"] .aurora {
+  opacity: 0.55;
 }
 
 @media (prefers-reduced-motion: reduce) {
