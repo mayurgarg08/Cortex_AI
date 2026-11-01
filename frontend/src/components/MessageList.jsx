@@ -30,7 +30,7 @@ function EmptyState() {
         transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
         className='relative'
       >
-        <div className='absolute inset-0 rounded-2xl bg-violet-500/40 blur-2xl' />
+        <div className='absolute inset-0 rounded-2xl bg-cyan-500/30 blur-2xl' />
         <LogoMark size={56} className="relative" />
       </motion.div>
 

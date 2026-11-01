@@ -21,14 +21,14 @@ function SplashScreen() {
         {[0, 0.6, 1.2].map((delay) => (
           <motion.div
             key={delay}
-            className='absolute h-16 w-16 rounded-2xl border border-violet-400/40'
+            className='absolute h-16 w-16 rounded-2xl border border-cyan-400/40'
             initial={{ scale: 0.8, opacity: 0.6 }}
             animate={{ scale: 2, opacity: 0 }}
             transition={{ duration: 1.8, repeat: Infinity, delay, ease: "easeOut" }}
           />
         ))}
         <motion.div animate={{ scale: [1, 1.06, 1] }} transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}>
-          <LogoMark size={64} className="drop-shadow-[0_0_30px_rgba(139,92,246,0.6)]" />
+          <LogoMark size={64} className="drop-shadow-[0_0_30px_rgba(56,189,248,0.5)]" />
         </motion.div>
       </div>
 

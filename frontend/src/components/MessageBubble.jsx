@@ -168,7 +168,7 @@ function MessageBubble({ role, content, images }) {
     <div className={`group flex gap-3 ${isUser ? "justify-end" : "justify-start"}`}>
       {!isUser && (
         <div className='shrink-0 pt-0.5'>
-          <LogoMark size={30} className="drop-shadow-[0_0_10px_rgba(139,92,246,0.35)]" />
+          <LogoMark size={30} className="drop-shadow-[0_0_10px_rgba(56,189,248,0.3)]" />
         </div>
       )}
 
