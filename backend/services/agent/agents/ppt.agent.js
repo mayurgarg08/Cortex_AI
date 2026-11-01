@@ -28,12 +28,21 @@ const parsePresentation = (content) => {
         throw new Error("The presentation model returned an invalid slide deck.")
     }
 
-    data.subtitle = typeof data.subtitle === "string" ? data.subtitle : ""
+    const asText = (value) => typeof value === "string" ? value.trim() : ""
+
+    data.subtitle = asText(data.subtitle)
+    data.takeaways = Array.isArray(data.takeaways) ? data.takeaways.map(asText).filter(Boolean) : []
     data.slides = data.slides
         .filter((slide) => slide && typeof slide.title === "string")
         .map((slide) => ({
             title: slide.title,
-            points: Array.isArray(slide.points) ? slide.points.filter((point) => typeof point === "string") : []
+            layout: asText(slide.layout).toLowerCase(),
+            highlight: asText(slide.highlight),
+            // Only keep a stat when both parts are present
+            stat: asText(slide.stat?.value) && asText(slide.stat?.label)
+                ? { value: asText(slide.stat.value), label: asText(slide.stat.label) }
+                : null,
+            points: Array.isArray(slide.points) ? slide.points.map(asText).filter(Boolean) : []
         }))
 
     if (data.slides.length === 0) {
@@ -59,20 +68,30 @@ Format:
 "slides":[
 {
 "title":"",
-"points":[
-"",
-"",
-"",
-""
-]
+"layout":"cards",
+"highlight":"",
+"stat":{"value":"","label":""},
+"points":["","","",""]
 }
-]
+],
+"takeaways":["","",""]
 }
 
 Rules:
 
-- Generate exactly 6 content slides.
-- Each slide should have 4-6 concise bullet points.
+- Generate exactly 6 content slides with a clear story: introduction, core ideas, and future or impact.
+- "title": short and engaging (max 8 words). "subtitle": one line that frames the deck.
+- Slide "title": max 6 words.
+- "points": 3-6 per slide, each a crisp phrase of max 14 words. No full stops at the end.
+- "layout": choose the best fit for each slide and vary them across the deck:
+  - "cards" for 4-6 parallel ideas, features or facts
+  - "split" for an explanation with one strong message
+  - "process" for 3-5 sequential steps or a timeline (points in order)
+  - "stat" when one well-known, accurate number captures the slide
+- "stat": only for the "stat" layout, e.g. {"value":"14M","label":"electric cars sold worldwide in 2023"}. Use real, widely reported figures only. Otherwise omit it.
+- "highlight": one memorable key insight for the slide (max 18 words).
+- "takeaways": exactly 3 short concluding messages (max 18 words each).
+- Use at least 3 different layouts.
 - No markdown.
 - No explanation.
 - No code block.

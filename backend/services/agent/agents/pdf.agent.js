@@ -25,17 +25,28 @@ Structure:
 {
 "title":"",
 "subtitle":"",
+"summary":"",
 "sections":[
 {
 "heading":"",
-"points":[]
+"intro":"",
+"points":[],
+"highlight":""
 }
-]
+],
+"conclusion":""
 }
 
-Generate 4-8 sections.
+Rules:
 
-Each section should have 3-6 concise bullet points.
+- "title": clear and engaging (max 10 words). "subtitle": one line describing the document.
+- "summary": an executive summary of 2-3 sentences.
+- Generate 4-7 sections that flow logically from background to details to impact or outlook.
+- "intro": 1-2 sentences that open the section.
+- "points": 3-6 informative bullet points, each one complete sentence with a concrete fact or detail.
+- "highlight": one key insight or notable fact for the section (max 25 words). Omit it if nothing stands out.
+- "conclusion": 2-3 sentences that wrap up the document.
+- Use only accurate, widely known facts. Use plain text without emoji.
 
 Topic:
 
