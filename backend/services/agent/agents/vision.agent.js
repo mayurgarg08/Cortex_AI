@@ -1,5 +1,5 @@
 import { getModel } from "../config/llmModels.js"
-import axios from "axios"
+import { generateImage } from "../utils/generateImage.js"
 import { storeFile } from "../utils/storeFile.js"
 import { imageResponse, toFileName } from "../utils/fileResponse.js"
 import { deductCredits } from "../utils/deductCredits.js"
@@ -41,9 +41,7 @@ ${state.prompt}
 
 const prompt=typeof res?.content === "string" && res.content.trim() ? res.content.trim() : fallbackPrompt
 
-const imageUrl=`https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}`
-
-const imageRes=await axios.get(imageUrl,{responseType:"arraybuffer",timeout:60000})
+const imageRes=await generateImage(prompt)
 const buffer=Buffer.from(imageRes.data)
 if (!buffer.length) throw new Error("Image provider returned an empty file.")
 const contentType=imageRes.headers["content-type"]?.split(";")[0] || "image/jpeg"
